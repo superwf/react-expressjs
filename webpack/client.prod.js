@@ -3,20 +3,25 @@ const webpack = require('webpack');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 
+const extractModuleScss = new ExtractTextPlugin('css/style.css');
+
 module.exports = {
   context: path.join(__dirname, '../client'),
   devtool: 'source-map',
-  entry: [
-    './src/index.js',
-    './res/scss/main.scss',
-  ],
+  entry: ['./src/index.js', './res/scss/main.scss'],
   output: {
     path: path.join(__dirname, '../server/public'),
     filename: './js/index.js',
     publicPath: '/',
   },
+  externals: {
+    react: 'React',
+    'react-dom': 'ReactDOM',
+    swiper: 'Swiper',
+  },
   module: {
-    rules: [{
+    rules: [
+      {
         test: /\.js$/,
         exclude: /node_modules/,
         use: {
@@ -27,32 +32,42 @@ module.exports = {
         },
       },
       {
-        test: /\.scss$/,
+        test: /res\/scss\/.+\.scss$/,
         use: ExtractTextPlugin.extract({
           fallback: 'style-loader',
           use: ['css-loader', 'sass-loader'],
         }),
       },
       {
+        test: /components\/.+\.scss$/,
+        use: extractModuleScss.extract({
+          fallback: 'style-loader',
+          use: ['css-loader', 'sass-loader'],
+        }),
+      },
+      {
         test: /\.(png|jpg|gif)$/,
-        use: [{
-          loader: 'file-loader',
-          options: {
-            outputPath: 'images/',
-          }
-        }]
+        use: [
+          {
+            loader: 'file-loader',
+            options: {
+              outputPath: 'images/',
+            },
+          },
+        ],
       },
     ],
   },
   plugins: [
     new webpack.DefinePlugin({
       'process.env': {
-        'NODE_ENV': JSON.stringify('production')
-      }
+        NODE_ENV: JSON.stringify('production'),
+      },
     }),
     new UglifyJSPlugin({
-      sourceMap: true
+      sourceMap: true,
     }),
     new ExtractTextPlugin('css/main.css'),
+    extractModuleScss,
   ],
 };

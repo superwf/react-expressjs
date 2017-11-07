@@ -2,13 +2,14 @@ const path = require('path');
 const webpack = require('webpack');
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const nodeExternals = require('webpack-node-externals');
+const ExtractTextPlugin = require('extract-text-webpack-plugin');
+
+const extractModuleScss = new ExtractTextPlugin('css/style1.css');
 
 module.exports = {
   context: path.join(__dirname, '../server'),
   devtool: 'source-map',
-  entry: [
-    './routes/index.js',
-  ],
+  entry: ['./routes/index.js'],
   output: {
     path: path.join(__dirname, '../server/bin'),
     filename: './server.js',
@@ -34,20 +35,28 @@ module.exports = {
             options: {
               outputPath: 'images/',
               emitFile: false,
-            }  
-          }
-        ]
+            },
+          },
+        ],
+      },
+      {
+        test: /components\/.+\.scss$/,
+        use: extractModuleScss.extract({
+          fallback: 'style-loader',
+          use: ['css-loader', 'sass-loader'],
+        }),
       },
     ],
   },
   plugins: [
     new webpack.DefinePlugin({
       'process.env': {
-        'NODE_ENV': JSON.stringify('production')
-      }
+        NODE_ENV: JSON.stringify('production'),
+      },
     }),
     new UglifyJSPlugin({
-      sourceMap: true
+      sourceMap: true,
     }),
-  ]
+    extractModuleScss,
+  ],
 };
